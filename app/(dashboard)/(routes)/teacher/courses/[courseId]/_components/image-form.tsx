@@ -11,7 +11,6 @@ import { useToast } from "@/components/ui/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Image from "next/image";
 import FileUpload from "@/components/file-upload";
-import Skeleton from "@/components/skeleton";
 import { useRouter } from "next/navigation";
 
 interface ImageFormProps {

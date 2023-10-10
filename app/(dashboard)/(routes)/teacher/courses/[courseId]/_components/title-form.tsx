@@ -87,9 +87,9 @@ export const TitleForm = ({ title, courseId }: TitleFormProps) => {
         </Button>
       </div>
       {!isEditing && (
-        <p className="mt-2 text-sm">
+        <div className="mt-2 text-sm">
           {isLoading ? <Skeleton /> : data?.title || title}
-        </p>
+        </div>
       )}
       {isEditing && (
         <Form {...form}>

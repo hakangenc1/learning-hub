@@ -21,20 +21,23 @@ import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import Skeleton from "@/components/skeleton";
+import { Combobox } from "@/components/ui/combobox";
 
-interface DescriptionFormProps {
-  description: string;
+interface CategoryFormProps {
+  categoryId: string;
   courseId: string;
+  options: { label: string; value: string }[];
 }
 
 const formSchema = z.object({
-  description: z.string().min(1, { message: "Description is required" }),
+  categoryId: z.string().min(1),
 });
 
-export const DescriptionForm = ({
-  description,
+export const CategoryForm = ({
+  categoryId,
   courseId,
-}: DescriptionFormProps) => {
+  options,
+}: CategoryFormProps) => {
   const { toast } = useToast();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -43,22 +46,22 @@ export const DescriptionForm = ({
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { description: description },
+    defaultValues: { categoryId: categoryId },
   });
 
-  const updateDescription = async (values: { description: string }) => {
+  const updateCategory = async (values: { categoryId: string }) => {
     const response = await axios.patch(`/api/courses/${courseId}`, values);
     return response.data;
   };
   const queryClient = useQueryClient();
   const { mutate, isLoading, data } = useMutation(
-    (values: z.infer<typeof formSchema>) => updateDescription(values),
+    (values: z.infer<typeof formSchema>) => updateCategory(values),
     {
       // Define onSuccess callback to handle the mutation success
       onSuccess: () => {
         toast({
-          title: "Course description has been updated.",
-        });        
+          title: "Course category has been updated.",
+        });
         router.refresh();
       },
       // Define onError callback to handle the mutation error
@@ -70,22 +73,24 @@ export const DescriptionForm = ({
       },
       // Invalidate queries related to this data upon success
       onSettled: () => {
-        queryClient.invalidateQueries(["description", courseId]);
+        queryClient.invalidateQueries(["category", categoryId]);
       },
     }
   );
   const { isValid } = form.formState;
+
+  const selectedOption = options.find((option) => option.value === categoryId);
   return (
     <div className="p-4 mt-6 border rounded-md bg-slate-100">
       <div className="flex items-center justify-between font-medium">
-        Course description
+        Course category
         <Button variant="ghost" onClick={toggleEdit}>
           {isEditing ? (
             <>Cancel</>
           ) : (
             <>
               <PencilIcon className="w-4 mr-2 h4" />
-              Edit description
+              Edit category
             </>
           )}
         </Button>
@@ -94,20 +99,16 @@ export const DescriptionForm = ({
         <div
           className={cn(
             "text-sm mt-2",
-            !description && !data?.description && "text-slate-500 italic"
+            !categoryId && !data?.categoryId && "text-slate-500 italic"
           )}
         >
-          {isLoading ? (
-            <Skeleton />
-          ) : (
-            data?.description || description || "No Description"
-          )}
+          {isLoading ? <Skeleton /> : selectedOption?.label || "No category"}
         </div>
       )}
       {isEditing && (
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((values: { description: string }) => {
+            onSubmit={form.handleSubmit((values: { categoryId: string }) => {
               toggleEdit();
               mutate(values);
             })}
@@ -115,15 +116,11 @@ export const DescriptionForm = ({
           >
             <FormField
               control={form.control}
-              name="description"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Textarea
-                      disabled={isLoading}
-                      placeholder="e.g. 'This course is about...'"
-                      {...field}
-                    />
+                    <Combobox options={...options} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
